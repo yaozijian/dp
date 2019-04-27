@@ -1,6 +1,8 @@
 fn main() {
     find_coins(20);
     find_coins_ex(20);
+    find_coins_push(20);
+    find_coins_push_ex(20);
 }
 
 fn find_coins(target : usize){
@@ -49,6 +51,100 @@ fn find_coins_ex(target : usize){
         assert_eq!(choice.0 as usize,coins[idx].len());
         
         println!("f[{}]={}: {:?}",idx,choice.0,coins[idx]);
+    }
+}
+
+fn find_coins_push(target : i32){
+
+    use std::collections::HashMap;
+
+    let mut f = HashMap::with_capacity(target as usize + 1); 
+    let mut t1 = Vec::with_capacity(target as usize * 10);
+
+    let mut add = |(val,cost),face,t2:&mut Vec<(i32,i32)>|{
+        
+        let v = val + face;
+        let c = cost + 1;
+        let mut m = v <= target;
+
+        if m{
+            f.entry(v)
+                .and_modify(|v|{ m = c < *v; if m { *v = c; }}) 
+                .or_insert(c);
+        }
+        if m{
+            t2.push((v,c));
+        }
+    };
+
+    t1.push((0,0));
+
+    while t1.len() > 0{
+        let mut t2 = Vec::with_capacity(target as usize * 10);
+        for item in t1.into_iter(){
+            add(item,1,&mut t2);
+            add(item,5,&mut t2);
+            add(item,11,&mut t2);
+        }
+        t1 = t2;
+    }
+
+    for idx in 1..target+1{
+        println!("{}: {:?}",idx,f.get(&idx));
+    }
+}
+
+fn find_coins_push_ex(target : i32){
+
+    use std::collections::HashMap;
+
+    let mut f = HashMap::with_capacity(target as usize + 1); 
+    let mut t1 = Vec::with_capacity(target as usize * 10);
+    
+    let clone = |c:&Vec<i32>,f:i32|{
+        let mut x = c.clone();
+        x.push(f);
+        x
+    };
+
+    let mut add = |
+        (val,cost):&(i32,Vec<i32>),
+        face:i32,
+        t2:&mut Vec<(i32,Vec<i32>)>|{
+        
+        let v = val + face;
+        let c = cost.len() + 1;
+        let mut m = v <= target;
+
+        if m{
+            f.entry(v)
+                .and_modify(|v:&mut Vec<i32>|{ 
+                    m = c < v.len(); 
+                    if m {
+                        *v = clone(&cost,face);
+                    }
+                }) 
+                .or_insert(clone(&cost,face));
+        }
+        if m{
+            t2.push((v,clone(&cost,face)));
+        }
+    };
+
+    t1.push((0,vec![] as Vec<i32>));
+
+    while t1.len() > 0{
+        let mut t2 = Vec::with_capacity(target as usize * 10);
+        for item in t1.into_iter(){
+            add(&item,1,&mut t2);
+            add(&item,5,&mut t2);
+            add(&item,11,&mut t2);
+        }
+        t1 = t2;
+    }
+
+    for idx in 1..target+1{
+        println!("{}: {:?}",idx,f.get(&idx));
     }
 }
 
